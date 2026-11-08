@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .tablet-background {
+            background-color: #2c3e50;
+            width: 1000px;
+            max-width: 90%;
+            padding: 60px 0;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .register-container {
+            background-color: #ffffff;
+            padding: 40px 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 340px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 24px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0872c4;
+        }
+
+        .strength-bar {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #eee;
+            margin-bottom: 4px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #e74c3c;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .strength-text {
+            font-size: 12px;
+            text-align: right;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #e74c3c;
+            text-align: left;
+            margin-bottom: 8px;
+        }
+
+        .message {
+            color: green;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #0984e3;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 35px;
+            box-sizing: border-box;
+        }
+
+        .password-wrapper .toggle-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #555;
+            user-select: none;
+        }
+
+        .password-wrapper .toggle-eye:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+<div class="tablet-background">
+    <div class="register-container">
+        <h2>Register</h2>
+        <form method="post" action="/auth/register" id="registerForm">
+
+            <input type="email" name="email" placeholder="Email (example@gmail.com)"
+                   required pattern="[a-z0-9._%+-]+@gmail\.com$" title="Must be a valid Gmail address">
+
+            <input type="text" name="username" placeholder="Username" required>
+
+            <div class="password-wrapper">
+                <input type="password" name="password" placeholder="Password" required id="password"
+                       title="Password must be 8-64 chars, include uppercase, lowercase, number, special char">
+                <span class="toggle-eye" onclick="togglePassword('password', this)">
+                    <i class="fa-solid fa-eye"></i>
+                </span>
+            </div>
+
+            <div class="password-wrapper">
+                <input type="password" name="confirmPassword" placeholder="Confirm Password" required id="confirmPassword">
+                <span class="toggle-eye" onclick="togglePassword('confirmPassword', this)">
+                    <i class="fa-solid fa-eye"></i>
+                </span>
+            </div>
+
+            <div class="password-requirements">
+                <p>! Password must contain:</p>
+                <ul>
+                    <li>8-64 characters</li>
+                    <li>At least 1 uppercase letter</li>
+                    <li>At least 1 lowercase letter</li>
+                    <li>At least 1 number</li>
+                    <li>At least 1 special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+
+            <div class="strength-bar"><div class="strength-fill" id="strength"></div></div>
+            <p class="strength-text" id="strength-text">Password strength: Weak</p>
+
+            <button type="submit">Register</button>
+            <p class="error-message" id="errorMessage"></p>
+        </form>
+
+        <p class="message" th:text="${message}"></p>
+        <a class="link" href="/auth/login">Already have an account? Login</a>
+    </div>
+</div>
+
+<script>
+    const passwordInput = document.getElementById("password");
+    const confirmInput = document.getElementById("confirmPassword");
+    const strengthBar = document.getElementById("strength");
+    const strengthText = document.getElementById("strength-text");
+    const errorMessage = document.getElementById("errorMessage");
+    const form = document.getElementById("registerForm");
+
+    passwordInput.addEventListener("input", function () {
+        const value = passwordInput.value;
+        let strength = 0;
+
+        if (value.length >= 8) strength++;
+        if (/[A-Z]/.test(value)) strength++;
+        if (/[a-z]/.test(value)) strength++;
+        if (/\d/.test(value)) strength++;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) strength++;
+
+        const colors = ["#e74c3c", "#f39c12", "#f1c40f", "#2ecc71", "#27ae60"];
+        const texts = ["Weak", "Fair", "Good", "Strong", "Very Strong"];
+
+        const level = Math.min(strength, 5);
+        strengthBar.style.width = (level * 20) + "%";
+        strengthBar.style.backgroundColor = colors[level - 1] || "#e74c3c";
+        strengthText.textContent = "Password strength: " + texts[level - 1];
+    });
+
+    form.addEventListener("submit", function (e) {
+        errorMessage.textContent = "";
+
+        const pwd = passwordInput.value;
+        const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,64}$/;
+
+        if (!pwdPattern.test(pwd)) {
+            e.preventDefault();
+            errorMessage.textContent = "Password does not meet all requirements!";
+            return;
+        }
+
+        if (passwordInput.value !== confirmInput.value) {
+            e.preventDefault();
+            errorMessage.textContent = "Passwords do not match!";
+        }
+    });
+
+    function togglePassword(fieldId, eyeIcon) {
+        const input = document.getElementById(fieldId);
+        const icon = eyeIcon.querySelector("i");
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+</body>
+</html>

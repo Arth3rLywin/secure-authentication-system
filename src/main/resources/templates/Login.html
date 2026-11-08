@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        body {
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .tablet-background {
+            background-color: #2c3e50;
+            width: 1000px;
+            max-width: 90%;
+            padding: 60px 0;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .login-card {
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 350px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #212121;
+        }
+
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0872c4;
+        }
+
+        .message, .error {
+            color: white;
+            background: #f44336;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message {
+            background: #4CAF50;
+        }
+
+        .g-recaptcha {
+            margin: 15px 0;
+        }
+
+        .register-link {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Password field wrapper for eye icon */
+        .password-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 35px;
+            box-sizing: border-box;
+        }
+
+        .password-wrapper .toggle-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+            color: #555;
+        }
+
+        .password-wrapper .toggle-eye:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="tablet-background">
+    <div class="login-card">
+        <h2>Login</h2>
+
+        <form th:action="@{/auth/login}" method="post">
+            <div th:if="${message}" class="message" th:text="${message}"></div>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+
+            <input type="text" name="username" placeholder="Username" required th:value="${username}">
+
+            <div class="password-wrapper">
+                <input type="password" name="password" placeholder="Password" required id="password">
+                <span class="toggle-eye" onclick="togglePassword('password', this)">
+                    <i class="fa-solid fa-eye"></i>
+                </span>
+            </div>
+
+            <input type="text" name="totp" placeholder="Enter 6-digit TOTP code"
+                   th:if="${totpRequired}" required
+                   pattern="[0-9]{6}" maxlength="6"
+                   style="margin-top: 10px;" />
+
+            <div th:if="${totpRequired}" style="margin-top: 10px; text-align: right;">
+                <a th:href="@{/auth/register-totp(username=${username})}"
+                   style="font-size: 14px; color: #4CAF50; text-decoration: none;">
+                    🔐 Get your MFA
+                </a>
+            </div>
+
+            <div class="g-recaptcha" data-sitekey="6LfD9e8rAAAAAAw2lQQyhS3VaWysL1nDZJx1gfh4"></div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <div style="margin-top: 20px;">
+            <a href="/oauth2/authorization/google" style="
+                display: inline-block;
+                background-color: #4285F4;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                transition: background-color 0.3s ease;
+            ">Login with Google</a>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="/oauth2/authorization/github" style="
+                display: inline-block;
+                background-color: #f44336;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                transition: background-color 0.3s ease;
+            ">Login with GitHub</a>
+        </div>
+
+        <div class="register-link">
+            <span>Don't have an account? <a th:href="@{/auth/register}">Register here</a></span>
+        </div>
+        <div class="forget-password">
+            <span>Forgot your password? <a th:href="@{/auth/forget-password}">Reset here!</a></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword(fieldId, eyeIcon) {
+        const input = document.getElementById(fieldId);
+        const icon = eyeIcon.querySelector("i");
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+
+</body>
+</html>
